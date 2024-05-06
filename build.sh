@@ -21,6 +21,10 @@ else
             ;;
 
             rust)
+                # Start monitoring in the background and save the PID
+                ./monitor_power.sh &
+                MONITOR_PID=$!
+
                 echo "The first argument: $1"
                 FIXTURE=https://github.com/intel/openvino-rs/raw/main/crates/openvino/tests/fixtures/mobilenet
                 pushd $WASI_NN_DIR/rust/
@@ -35,6 +39,9 @@ else
                 wget --no-clobber --directory-prefix=$RUST_BUILD_DIR $FIXTURE/mobilenet.bin
                 wget --no-clobber --directory-prefix=$RUST_BUILD_DIR $FIXTURE/mobilenet.xml
                 wasmtime run --dir $RUST_BUILD_DIR::fixture -S nn wasi-nn-example.wasm
+
+                # Stop monitoring after the Rust program completes
+                kill $MONITOR_PID
             ;;
             *)
                 echo "Unknown build type $BUILD_TYPE"
